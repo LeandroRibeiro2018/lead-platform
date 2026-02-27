@@ -22,6 +22,13 @@ ALTER TABLE leads ADD COLUMN IF NOT EXISTS ibge_detalhes JSONB;
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS created_at    TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ DEFAULT NOW();
 
+-- Remove NOT NULL constraints que podem existir na tabela original
+-- (nossa versão permite NULL em vários campos)
+ALTER TABLE leads ALTER COLUMN origem   DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN segmento DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN status   DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN score_ibge DROP NOT NULL;
+
 -- Normaliza valores existentes antes de adicionar constraints
 -- (linhas com valores fora do esperado são convertidas para NULL/padrão)
 UPDATE leads SET status   = 'novo'  WHERE status   NOT IN ('novo','contato','qualificado','descartado') OR status   IS NULL;
