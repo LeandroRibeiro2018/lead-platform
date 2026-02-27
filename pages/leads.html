@@ -147,8 +147,9 @@
               <input type="text" class="form-input" id="fBairro" placeholder="Nome do bairro">
             </div>
             <div class="form-group">
-              <label class="form-label">CEP</label>
-              <input type="text" class="form-input" id="fCep" placeholder="00000-000" maxlength="9">
+              <label class="form-label">CEP <span id="cepStatus" style="font-size:12px;font-weight:400;color:var(--text-muted)"></span></label>
+              <input type="text" class="form-input" id="fCep" placeholder="00000-000" maxlength="9"
+                oninput="maskCep(this)" onblur="buscarCep()">
             </div>
           </div>
           <div class="form-grid">

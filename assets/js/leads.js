@@ -115,6 +115,9 @@ function openModal(data = null) {
   document.getElementById('modalTitle').textContent = data ? 'Editar Lead' : 'Novo Lead';
   document.getElementById('leadId').value = '';
 
+  const cepStatus = document.getElementById('cepStatus');
+  if (cepStatus) cepStatus.textContent = '';
+
   ['fNome','fEmail','fTelefone','fCpf','fBairro','fCep','fNotas','fNichoDesc'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -240,6 +243,64 @@ async function bulkDelete() {
   selectedIds.clear();
   toast(`${count} leads deletados`, 'warning');
   await loadLeads();
+}
+
+/* ── CEP Auto-fill (ViaCEP) ──────────────── */
+function maskCep(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+  input.value = v;
+  if (v.replace(/\D/g, '').length === 8) buscarCep();
+}
+
+async function buscarCep() {
+  const cep = document.getElementById('fCep').value.replace(/\D/g, '');
+  const status = document.getElementById('cepStatus');
+  if (cep.length !== 8) return;
+
+  status.textContent = '⏳ buscando...';
+  status.style.color = 'var(--text-muted)';
+
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+
+    if (data.erro) {
+      status.textContent = '⚠️ CEP não encontrado';
+      status.style.color = '#e53e3e';
+      return;
+    }
+
+    // Preenche bairro se estiver vazio
+    const bairroField = document.getElementById('fBairro');
+    if (!bairroField.value && data.bairro) bairroField.value = data.bairro;
+
+    // Seleciona estado e carrega cidades
+    const estadoSel = document.getElementById('fEstado');
+    if (data.uf && estadoSel.value !== data.uf) {
+      estadoSel.value = data.uf;
+      const cidadeSel = document.getElementById('fCidade');
+      await IBGE.popularSelectMunicipios(cidadeSel, data.uf);
+      // Seleciona a cidade pelo nome (normalizado)
+      const norm = s => s?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const target = norm(data.localidade);
+      const opt = Array.from(cidadeSel.options).find(o => norm(o.text) === target);
+      if (opt) cidadeSel.value = opt.value;
+    } else if (data.localidade) {
+      // Estado já selecionado — só tenta casar a cidade
+      const cidadeSel = document.getElementById('fCidade');
+      const norm = s => s?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const target = norm(data.localidade);
+      const opt = Array.from(cidadeSel.options).find(o => norm(o.text) === target);
+      if (opt) cidadeSel.value = opt.value;
+    }
+
+    status.textContent = '✅ ' + data.localidade + ', ' + data.uf;
+    status.style.color = '#38a169';
+  } catch (err) {
+    status.textContent = '⚠️ Erro ao buscar CEP';
+    status.style.color = '#e53e3e';
+  }
 }
 
 /* ── Estado/Cidade (IBGE localidades) ─────── */
