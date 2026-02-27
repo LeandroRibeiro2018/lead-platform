@@ -226,9 +226,12 @@ function scoreColor(score) {
 
 // Init on load
 function initSupabaseOnLoad() {
+  // Sempre semeia dados de demo no localStorage na primeira visita
+  // (usado como fallback se Supabase não conectar ou tabela estiver vazia)
+  _seedDemoLeads();
+
   if (APP_CONFIG.supabaseUrl.includes('SEU_PROJETO')) {
     setDbStatus('offline', 'Modo demo — configure o Supabase para dados reais');
-    _seedDemoLeads(); // popula localStorage na primeira visita
     return;
   }
   setDbStatus('connecting', 'Conectando...');

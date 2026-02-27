@@ -55,7 +55,17 @@
 </div>
 
 <div class="box">
-  <h2>8. Console de Erros JS</h2>
+  <h2>8. Supabase — Conexão Real</h2>
+  <div id="sbReal">Aguardando config.js...</div>
+</div>
+
+<div class="box">
+  <h2>9. localStorage — Leads Demo</h2>
+  <div id="seedTest">Verificando...</div>
+</div>
+
+<div class="box">
+  <h2>10. Console de Erros JS</h2>
   <div id="errLog"><span class="ok">Sem erros até agora</span></div>
 </div>
 
@@ -193,6 +203,63 @@
       log('configTest', `<div class="line err">❌ Erro ao ler APP_CONFIG: ${e.message}</div>`);
     }
   }, 500);
+
+  // 8. Supabase real — tenta conectar e buscar tabela leads
+  setTimeout(async () => {
+    const el = document.getElementById('sbReal');
+    try {
+      if (typeof APP_CONFIG === 'undefined') throw new Error('APP_CONFIG não carregado');
+      if (APP_CONFIG.supabaseUrl.includes('SEU_PROJETO')) {
+        el.innerHTML = '<div class="line warn">⚠️ Supabase não configurado (URL placeholder)</div>';
+        return;
+      }
+      const sbLib = window.supabase || window.supabaseJs;
+      if (!sbLib || typeof sbLib.createClient !== 'function') throw new Error('Supabase CDN não disponível');
+
+      const client = sbLib.createClient(APP_CONFIG.supabaseUrl, APP_CONFIG.supabaseKey);
+      el.innerHTML = '<div class="line info">🔄 Conectando ao Supabase...</div>';
+
+      const t0 = Date.now();
+      const { data, error } = await client.from('leads').select('id, nome, score_ibge, status').limit(5);
+      const ms = Date.now() - t0;
+
+      if (error) {
+        el.innerHTML = `
+          <div class="line err">❌ Erro ao consultar tabela <b>leads</b> (${ms}ms)</div>
+          <div class="line err">Código: ${error.code} — ${error.message}</div>
+          <div class="line warn">⚠️ Execute o schema.sql no Supabase SQL Editor (arquivo: supabase/schema.sql)</div>
+        `;
+      } else if (!data || data.length === 0) {
+        el.innerHTML = `
+          <div class="line ok">✅ Conexão OK — tabela <b>leads</b> existe (${ms}ms)</div>
+          <div class="line warn">⚠️ Tabela vazia — execute o schema.sql que inclui 10 leads de exemplo</div>
+        `;
+      } else {
+        const rows = data.map(r => `<div class="line info">  • ${r.nome} | score: ${r.score_ibge} | ${r.status}</div>`).join('');
+        el.innerHTML = `
+          <div class="line ok">✅ Supabase conectado — ${data.length} lead(s) encontrado(s) (${ms}ms)</div>
+          ${rows}
+        `;
+      }
+    } catch(e) {
+      el.innerHTML = `<div class="line err">❌ Falhou: ${e.message}</div>`;
+    }
+  }, 1200);
+
+  // 9. localStorage seed
+  setTimeout(() => {
+    const seeded = localStorage.getItem('leads_seeded');
+    const leads  = JSON.parse(localStorage.getItem('leads_local') || '[]');
+    let html = '';
+    if (leads.length > 0) {
+      html += `<div class="line ok">✅ ${leads.length} leads demo no localStorage</div>`;
+      html += `<div class="line info">Exemplo: ${leads[0].nome} — ${leads[0].cidade}/${leads[0].estado} — score ${leads[0].score_ibge}</div>`;
+    } else {
+      html += `<div class="line warn">⚠️ localStorage vazio (leads_local = []). Carregue o index.html para acionar o seed automático.</div>`;
+    }
+    html += `<div class="line info">Flag leads_seeded: ${seeded || 'não definido'}</div>`;
+    document.getElementById('seedTest').innerHTML = html;
+  }, 600);
 </script>
 
 </body>
