@@ -6,16 +6,20 @@ let allLeads = [];
 let selectedIds = new Set();
 let ibgeScoreData = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initLeads() {
   await IBGE.popularSelectEstados(document.getElementById('fEstado'));
   await IBGE.popularSelectEstados(document.getElementById('filterEstado'));
   await loadLeads();
-  // Handle #novo hash
   if (location.hash === '#novo') openModal();
-  // Handle ?id= param
   const id = new URLSearchParams(location.search).get('id');
   if (id) editLead(id);
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLeads);
+} else {
+  initLeads();
+}
 
 /* ── Load & Render ────────────────────────── */
 async function loadLeads() {

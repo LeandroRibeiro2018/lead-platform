@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Diagnóstico — LeadIBGE</title>
+  <style>
+    body { font-family: monospace; padding: 24px; background: #0f172a; color: #e2e8f0; font-size: 14px; }
+    h1 { color: #818cf8; margin-bottom: 20px; }
+    .box { background: #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .box h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; }
+    .line { padding: 4px 0; border-bottom: 1px solid #334155; }
+    .ok   { color: #34d399; }
+    .err  { color: #f87171; }
+    .warn { color: #fbbf24; }
+    .info { color: #60a5fa; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+<h1>🔍 Diagnóstico LeadIBGE</h1>
+
+<div class="box">
+  <h2>1. JavaScript &amp; localStorage</h2>
+  <div id="jsTest"></div>
+</div>
+
+<div class="box">
+  <h2>2. IBGE API — Estados (localidades)</h2>
+  <div id="ibgeEstados">Testando...</div>
+</div>
+
+<div class="box">
+  <h2>3. IBGE API — Municípios SP</h2>
+  <div id="ibgeMunicipios">Testando...</div>
+</div>
+
+<div class="box">
+  <h2>4. IBGE API — PIB SIDRA (São Paulo)</h2>
+  <div id="ibgePib">Testando...</div>
+</div>
+
+<div class="box">
+  <h2>5. IBGE API — População Censo 2022 (São Paulo)</h2>
+  <div id="ibgePop">Testando...</div>
+</div>
+
+<div class="box">
+  <h2>6. Supabase CDN</h2>
+  <div id="supabaseTest">Testando...</div>
+</div>
+
+<div class="box">
+  <h2>7. config.js / APP_CONFIG</h2>
+  <div id="configTest">Aguardando scripts...</div>
+</div>
+
+<div class="box">
+  <h2>8. Console de Erros JS</h2>
+  <div id="errLog"><span class="ok">Sem erros até agora</span></div>
+</div>
+
+<!-- CDN igual ao app -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const errLog = document.getElementById('errLog');
+  const errors = [];
+  window.onerror = (msg, src, line, col, err) => {
+    errors.push(`<div class="line err">❌ ${msg} — ${src}:${line}</div>`);
+    errLog.innerHTML = errors.join('');
+  };
+  window.onunhandledrejection = e => {
+    errors.push(`<div class="line err">❌ (Promise) ${e.reason}</div>`);
+    errLog.innerHTML = errors.join('');
+  };
+
+  function log(id, html) { document.getElementById(id).innerHTML = html; }
+
+  // 1. JS básico
+  try {
+    localStorage.setItem('_test_', '1');
+    localStorage.removeItem('_test_');
+    log('jsTest', '<div class="line ok">✅ JavaScript: OK</div><div class="line ok">✅ localStorage: OK</div>');
+  } catch(e) {
+    log('jsTest', `<div class="line err">❌ localStorage falhou: ${e.message}</div>`);
+  }
+
+  // 6. Supabase CDN
+  setTimeout(() => {
+    const sb = window.supabase;
+    if (!sb) {
+      log('supabaseTest', '<div class="line err">❌ window.supabase = undefined — CDN não carregou ou global diferente</div>');
+      // Tenta outros nomes possíveis
+      const alts = ['supabaseJs','Supabase','createClient'];
+      alts.forEach(k => {
+        if (window[k]) log('supabaseTest', `<div class="line warn">⚠️ Encontrado como window.${k}</div>`);
+      });
+    } else if (typeof sb.createClient === 'function') {
+      log('supabaseTest', '<div class="line ok">✅ window.supabase.createClient: disponível</div>');
+    } else {
+      log('supabaseTest', `<div class="line warn">⚠️ window.supabase existe mas sem createClient. Keys: ${Object.keys(sb).join(', ')}</div>`);
+    }
+  }, 1000);
+
+  // 2. IBGE Estados
+  (async () => {
+    try {
+      const t0 = Date.now();
+      const r = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+      const ms = Date.now() - t0;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      log('ibgeEstados', `<div class="line ok">✅ ${data.length} estados carregados em ${ms}ms</div><div class="line info">Exemplo: ${data[0].nome} (${data[0].sigla})</div>`);
+    } catch(e) {
+      log('ibgeEstados', `<div class="line err">❌ Falhou: ${e.message}</div>`);
+    }
+  })();
+
+  // 3. IBGE Municípios SP
+  (async () => {
+    try {
+      const t0 = Date.now();
+      const r = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/SP/municipios?orderBy=nome');
+      const ms = Date.now() - t0;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      log('ibgeMunicipios', `<div class="line ok">✅ ${data.length} municípios SP em ${ms}ms</div><div class="line info">Primeiro: ${data[0].nome} (id: ${data[0].id})</div>`);
+    } catch(e) {
+      log('ibgeMunicipios', `<div class="line err">❌ Falhou: ${e.message}</div>`);
+    }
+  })();
+
+  // 4. PIB SIDRA São Paulo
+  (async () => {
+    try {
+      const t0 = Date.now();
+      const url = 'https://servicodados.ibge.gov.br/api/v3/agregados/5938/periodos/2021/variaveis/37?localidades=N6[3550308]';
+      const r = await fetch(url);
+      const ms = Date.now() - t0;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const val = data?.[0]?.resultados?.[0]?.series?.[0]?.serie?.['2021'];
+      if (val) {
+        const pibPerCapita = Math.round((parseFloat(val) * 1000) / 11451999);
+        log('ibgePib', `<div class="line ok">✅ PIB total SP 2021: R$ ${Number(val).toLocaleString('pt-BR')} mil em ${ms}ms</div><div class="line info">PIB per capita estimado: R$ ${pibPerCapita.toLocaleString('pt-BR')}</div>`);
+      } else {
+        log('ibgePib', `<div class="line warn">⚠️ Resposta OK mas valor ausente. JSON: <pre>${JSON.stringify(data).substring(0,300)}</pre></div>`);
+      }
+    } catch(e) {
+      log('ibgePib', `<div class="line err">❌ Falhou: ${e.message}</div>`);
+    }
+  })();
+
+  // 5. População Censo 2022
+  (async () => {
+    try {
+      const t0 = Date.now();
+      const url = 'https://servicodados.ibge.gov.br/api/v3/agregados/9514/periodos/2022/variaveis/93?localidades=N6[3550308]';
+      const r = await fetch(url);
+      const ms = Date.now() - t0;
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const val = data?.[0]?.resultados?.[0]?.series?.[0]?.serie?.['2022'];
+      if (val) {
+        log('ibgePop', `<div class="line ok">✅ População SP Censo 2022: ${Number(val).toLocaleString('pt-BR')} pessoas em ${ms}ms</div>`);
+      } else {
+        log('ibgePop', `<div class="line warn">⚠️ Valor ausente. JSON: <pre>${JSON.stringify(data).substring(0,300)}</pre></div>`);
+      }
+    } catch(e) {
+      log('ibgePop', `<div class="line err">❌ Falhou: ${e.message}</div>`);
+    }
+  })();
+</script>
+
+<!-- Config e supabase-client para testar integração real -->
+<script src="assets/js/config.js"></script>
+<script>
+  // Aguarda config.js carregar
+  setTimeout(() => {
+    try {
+      if (typeof APP_CONFIG !== 'undefined') {
+        log('configTest', `
+          <div class="line ok">✅ APP_CONFIG carregado</div>
+          <div class="line ${APP_CONFIG.supabaseUrl.includes('SEU_PROJETO') ? 'warn' : 'ok'}">
+            ${APP_CONFIG.supabaseUrl.includes('SEU_PROJETO') ? '⚠️' : '✅'} supabaseUrl: ${APP_CONFIG.supabaseUrl}
+          </div>
+          <div class="line info">scoreWeights: ${JSON.stringify(APP_CONFIG.scoreWeights)}</div>
+        `);
+      } else {
+        log('configTest', '<div class="line err">❌ APP_CONFIG undefined — config.js não carregou</div>');
+      }
+    } catch(e) {
+      log('configTest', `<div class="line err">❌ Erro ao ler APP_CONFIG: ${e.message}</div>`);
+    }
+  }, 500);
+</script>
+
+</body>
+</html>

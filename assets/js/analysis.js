@@ -5,9 +5,15 @@
 let radarChart = null;
 let currentMunicipio = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initAnalysis() {
   await IBGE.popularSelectEstados(document.getElementById('anaEstado'));
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAnalysis);
+} else {
+  initAnalysis();
+}
 
 async function onAnaEstadoChange() {
   const uf = document.getElementById('anaEstado').value;

@@ -7,14 +7,18 @@ let _dbReady = false;
 
 function initSupabase() {
   try {
-    const { createClient } = window.supabase;
-    supabase = createClient(APP_CONFIG.supabaseUrl, APP_CONFIG.supabaseKey);
+    // Supabase CDN v2 expõe o módulo como window.supabase
+    const sbLib = window.supabase || window.supabaseJs || window['@supabase/supabase-js'];
+    if (!sbLib || typeof sbLib.createClient !== 'function') {
+      throw new Error('Supabase CDN não carregou (window.supabase não encontrado)');
+    }
+    supabase = sbLib.createClient(APP_CONFIG.supabaseUrl, APP_CONFIG.supabaseKey);
     _dbReady = true;
     setDbStatus('online', 'Supabase conectado');
     return supabase;
   } catch(e) {
     console.error('Supabase init error:', e);
-    setDbStatus('offline', 'Erro na conexão');
+    setDbStatus('offline', 'Supabase não configurado');
     return null;
   }
 }
@@ -192,11 +196,17 @@ function scoreColor(score) {
 }
 
 // Init on load
-document.addEventListener('DOMContentLoaded', () => {
+function initSupabaseOnLoad() {
   if (APP_CONFIG.supabaseUrl.includes('SEU_PROJETO')) {
     setDbStatus('offline', 'Configure o Supabase');
     return;
   }
   setDbStatus('connecting', 'Conectando...');
   initSupabase();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSupabaseOnLoad);
+} else {
+  initSupabaseOnLoad();
+}

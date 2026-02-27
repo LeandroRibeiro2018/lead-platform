@@ -5,11 +5,18 @@
 let leadsLineChart, segmentsPieChart, statesBarChart, incomeBarChart;
 let currentPeriod = '7d';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initDashboard() {
   await loadKPIs();
   await loadCharts('7d');
   await loadRecentLeads();
-});
+}
+
+// Compatível com scripts no final do body e no head
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
 
 /* ── KPIs ─────────────────────────────────── */
 async function loadKPIs() {
