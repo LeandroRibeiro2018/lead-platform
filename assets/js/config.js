@@ -11,32 +11,41 @@ const APP_CONFIG = {
   // ── Supabase ──────────────────────────────
   // 1. Acesse https://app.supabase.com → seu projeto → Settings → API
   // 2. Copie "Project URL" e "anon public" key
-  // 3. OU configure via páginal de Configurações da plataforma
+  // 3. OU configure via página de Configurações da plataforma
   supabaseUrl:  _savedUrl  || 'https://bhargdkruycbrcanfvuz.supabase.co',
   supabaseKey:  _savedKey  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoYXJnZGtydXljYnJjYW5mdnV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQ1NzgsImV4cCI6MjA4NzQ1MDU3OH0.jBRK_IhUNzxMzf_4UNjpabgwEB7MpqrTL29qTvZK_os',
 
   // ── App ───────────────────────────────────
-  appName: 'LeadIBGE',
-  version: '1.0.0',
+  appName: 'NichoLeads',
+  version: '2.0.0',
 
-  // ── IBGE API ──────────────────────────────
+  // ── IBGE API (para busca de estados/cidades) ──
   ibgeBaseUrl: 'https://servicodados.ibge.gov.br/api',
 
-  // ── Score ─────────────────────────────────
-  // Pesos para calcular o score do lead baseado em dados regionais do IBGE
-  // (ajuste em Configurações → Pesos ou edite aqui diretamente)
-  scoreWeights: _savedWeights || {
-    pib_per_capita:   0.35,   // peso do PIB per capita municipal
-    populacao:        0.15,   // densidade / porte do município
-    idh:              0.30,   // IDH municipal
-    grau_instrucao:   0.20,   // nível de instrução médio da região
-  },
+  // ── Nichos de Produto ─────────────────────
+  nichos: [
+    'Estética e Beleza',
+    'Alimentação e Gastronomia',
+    'Saúde e Bem-estar',
+    'Moda e Vestuário',
+    'Tecnologia e TI',
+    'Imóveis',
+    'Educação e Cursos',
+    'Finanças e Investimentos',
+    'Serviços Domésticos',
+    'E-commerce',
+    'Automotivo',
+    'Pet Shop',
+    'Academia e Fitness',
+    'Construção e Reformas',
+    'Outros',
+  ],
 
-  // ── Segmentos ─────────────────────────────
-  segments: {
-    premium:   { min: 80, label: 'Premium',    badge: 'badge-green'  },
-    alto:      { min: 60, label: 'Alto Valor', badge: 'badge-blue'   },
-    medio:     { min: 40, label: 'Médio',      badge: 'badge-orange' },
-    baixo:     { min: 0,  label: 'Básico',     badge: 'badge-gray'   },
-  },
+  // ── Status ────────────────────────────────
+  statusList: [
+    { value: 'novo',        label: 'Novo',         badge: 'badge-blue'   },
+    { value: 'contato',     label: 'Em Contato',   badge: 'badge-orange' },
+    { value: 'qualificado', label: 'Qualificado',  badge: 'badge-green'  },
+    { value: 'descartado',  label: 'Descartado',   badge: 'badge-red'    },
+  ],
 };

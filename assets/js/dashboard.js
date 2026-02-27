@@ -21,16 +21,18 @@ if (document.readyState === 'loading') {
 /* ── KPIs ─────────────────────────────────── */
 async function loadKPIs() {
   const stats = await getLeadStats();
+  const nichoCount = Object.keys(stats.nichoMap || {}).length;
+
   document.getElementById('totalLeads').textContent     = stats.total.toLocaleString('pt-BR');
   document.getElementById('qualifiedLeads').textContent = stats.qualified.toLocaleString('pt-BR');
-  document.getElementById('avgScore').textContent       = stats.avgScore || '—';
+  document.getElementById('avgScore').textContent       = nichoCount || '—';
   document.getElementById('statesCovered').textContent  = stats.states;
 
   const pct = stats.total ? Math.round((stats.qualified / stats.total) * 100) : 0;
-  document.getElementById('deltaLeads').textContent    = `${stats.total} cadastrados no total`;
+  document.getElementById('deltaLeads').textContent     = `${stats.total} cadastrados no total`;
   document.getElementById('deltaQualified').textContent = `${pct}% do total`;
-  document.getElementById('deltaScore').textContent    = 'Score baseado no IBGE';
-  document.getElementById('deltaStates').textContent   = `de 27 UFs`;
+  document.getElementById('deltaScore').textContent     = `tipos de nicho`;
+  document.getElementById('deltaStates').textContent    = `de 27 UFs`;
 }
 
 /* ── Charts ───────────────────────────────── */
@@ -67,17 +69,17 @@ async function loadCharts(period) {
     },
   });
 
-  // Segments Doughnut
-  const segEntries = Object.entries(stats.segments);
+  // Nichos Doughnut
+  const nichoEntries = Object.entries(stats.nichoMap || {}).sort((a,b)=>b[1]-a[1]);
   const ctxPie = document.getElementById('segmentsChart');
   if (segmentsPieChart) segmentsPieChart.destroy();
   segmentsPieChart = new Chart(ctxPie, {
     type: 'doughnut',
     data: {
-      labels: segEntries.map(([k]) => k),
+      labels: nichoEntries.map(([k]) => k),
       datasets: [{
-        data: segEntries.map(([,v]) => v),
-        backgroundColor: ['#10B981','#4F46E5','#F59E0B','#94A3B8'],
+        data: nichoEntries.map(([,v]) => v),
+        backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#84CC16','#EC4899','#14B8A6'],
         borderWidth: 2,
         borderColor: '#fff',
       }],
@@ -86,7 +88,7 @@ async function loadCharts(period) {
       responsive: true,
       cutout: '65%',
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
       },
     },
   });
@@ -116,25 +118,18 @@ async function loadCharts(period) {
     },
   });
 
-  // Income distribution (segmento como proxy)
+  // Top Nichos por estado (barras horizontais)
   const ctxIncome = document.getElementById('incomeChart');
   if (incomeBarChart) incomeBarChart.destroy();
-  const labels = ['Premium (80+)', 'Alto (60-79)', 'Médio (40-59)', 'Básico (<40)'];
-  const segs = stats.segments;
-  const incData = [
-    segs['Premium'] || 0,
-    segs['Alto Valor'] || 0,
-    segs['Médio'] || 0,
-    segs['Básico'] || 0,
-  ];
+  const topNichos = Object.entries(stats.nichoMap || {}).sort((a,b)=>b[1]-a[1]).slice(0, 6);
   incomeBarChart = new Chart(ctxIncome, {
     type: 'bar',
     data: {
-      labels,
+      labels: topNichos.map(([k]) => k),
       datasets: [{
         label: 'Leads',
-        data: incData,
-        backgroundColor: ['#10B981','#4F46E5','#F59E0B','#94A3B8'],
+        data: topNichos.map(([,v]) => v),
+        backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'],
         borderRadius: 6,
       }],
     },
@@ -143,7 +138,7 @@ async function loadCharts(period) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#F1F5F9' } },
+        x: { grid: { color: '#F1F5F9' }, beginAtZero: true },
         y: { grid: { display: false } },
       },
     },
@@ -174,25 +169,20 @@ async function loadRecentLeads() {
   }
 
   tbody.innerHTML = leads.map(l => {
-    const seg = getSegment(l.score_ibge || 0);
     const statusBadge = {
       'novo':         'badge-blue',
       'contato':      'badge-orange',
       'qualificado':  'badge-green',
       'descartado':   'badge-red',
     }[l.status] || 'badge-gray';
-    const score = l.score_ibge || 0;
     return `
       <tr>
         <td><strong>${l.nome}</strong><br><span style="color:var(--text-muted);font-size:12px">${l.email||''}</span></td>
-        <td>${l.cidade || '—'}${l.estado ? ', '+l.estado : ''}</td>
         <td>
-          <div class="score-bar">
-            <div class="score-track"><div class="score-fill" style="width:${score}%;background:${scoreColor(score)}"></div></div>
-            <span class="score-num" style="color:${scoreColor(score)}">${score}</span>
-          </div>
+          ${l.cidade || '—'}${l.estado ? ', '+l.estado : ''}
+          ${l.bairro ? `<br><span style="color:var(--text-muted);font-size:12px">📍 ${l.bairro}</span>` : ''}
         </td>
-        <td><span class="badge ${seg.badge}">${seg.label}</span></td>
+        <td>${l.nicho ? `<span class="badge badge-blue">${l.nicho}</span>` : '—'}</td>
         <td><span class="badge ${statusBadge}">${l.status||'novo'}</span></td>
         <td>${formatDate(l.created_at)}</td>
         <td>

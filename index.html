@@ -14,8 +14,8 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon">📊</div>
-      <span class="logo-text">LeadIBGE</span>
+      <div class="logo-icon">🎯</div>
+      <span class="logo-text">NichoLeads</span>
     </div>
     <nav class="sidebar-nav">
       <a href="index.html" class="nav-item active">
@@ -82,11 +82,11 @@
         </div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-icon orange">🔥</div>
+        <div class="kpi-icon orange">🎯</div>
         <div class="kpi-info">
-          <p class="kpi-label">Score Médio</p>
+          <p class="kpi-label">Nichos Cadastrados</p>
           <h2 class="kpi-value" id="avgScore">—</h2>
-          <span class="kpi-delta" id="deltaScore">Baseado no IBGE</span>
+          <span class="kpi-delta" id="deltaScore">tipos de nicho</span>
         </div>
       </div>
       <div class="kpi-card">
@@ -114,7 +114,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h3>Segmentos IBGE</h3>
+          <h3>Distribuição por Nicho</h3>
         </div>
         <canvas id="segmentsChart" height="200"></canvas>
       </div>
@@ -130,7 +130,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h3>Faixa de Renda Regional</h3>
+          <h3>Top Nichos</h3>
         </div>
         <canvas id="incomeChart" height="200"></canvas>
       </div>
@@ -147,9 +147,8 @@
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Cidade / Estado</th>
-              <th>Score IBGE</th>
-              <th>Segmento</th>
+              <th>Cidade / Bairro</th>
+              <th>Nicho</th>
               <th>Status</th>
               <th>Data</th>
               <th>Ações</th>
@@ -157,7 +156,7 @@
           </thead>
           <tbody id="recentLeadsBody">
             <tr>
-              <td colspan="7" class="loading-row">Carregando leads...</td>
+              <td colspan="6" class="loading-row">Carregando leads...</td>
             </tr>
           </tbody>
         </table>

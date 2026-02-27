@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leads — LeadIBGE</title>
+  <title>Leads — NichoLeads</title>
   <link rel="stylesheet" href="../assets/css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -11,14 +11,14 @@
 <body class="bg-gray">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon">📊</div>
-      <span class="logo-text">LeadIBGE</span>
+      <div class="logo-icon">🎯</div>
+      <span class="logo-text">NichoLeads</span>
     </div>
     <nav class="sidebar-nav">
       <a href="../index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Dashboard</span></a>
       <a href="leads.html" class="nav-item active"><span class="nav-icon">👥</span><span>Leads</span></a>
-      <a href="analysis.html" class="nav-item"><span class="nav-icon">🗺️</span><span>Análise IBGE</span></a>
-      <a href="segments.html" class="nav-item"><span class="nav-icon">🎯</span><span>Segmentos</span></a>
+      <a href="analysis.html" class="nav-item"><span class="nav-icon">🗺️</span><span>Análise</span></a>
+      <a href="segments.html" class="nav-item"><span class="nav-icon">📊</span><span>Nichos</span></a>
       <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span>Configurações</span></a>
     </nav>
     <div class="sidebar-footer">
@@ -34,7 +34,7 @@
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="topbar-title">
         <h1>Leads</h1>
-        <span class="subtitle">Gerencie e qualifique todos os seus leads</span>
+        <span class="subtitle">Gerencie e filtre leads por nicho e localização</span>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-outline" onclick="exportCSV()">⬇ Exportar CSV</button>
@@ -44,16 +44,12 @@
 
     <!-- Filters -->
     <div class="filter-bar">
-      <input type="text" class="form-input filter-search" id="searchInput" placeholder="🔍 Buscar por nome, email..." oninput="applyFilters()">
+      <input type="text" class="form-input filter-search" id="searchInput" placeholder="🔍 Buscar por nome, email, bairro..." oninput="applyFilters()">
       <select class="form-select" id="filterEstado" onchange="applyFilters()">
         <option value="">Todos os estados</option>
       </select>
-      <select class="form-select" id="filterSegmento" onchange="applyFilters()">
-        <option value="">Todos os segmentos</option>
-        <option value="Premium">Premium</option>
-        <option value="Alto Valor">Alto Valor</option>
-        <option value="Médio">Médio</option>
-        <option value="Básico">Básico</option>
+      <select class="form-select" id="filterNicho" onchange="applyFilters()">
+        <option value="">Todos os nichos</option>
       </select>
       <select class="form-select" id="filterStatus" onchange="applyFilters()">
         <option value="">Todos os status</option>
@@ -74,16 +70,15 @@
               <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
               <th>Nome</th>
               <th>Contato</th>
-              <th>Localização</th>
-              <th>Score IBGE</th>
-              <th>Segmento</th>
+              <th>Localização / Bairro</th>
+              <th>Nicho</th>
               <th>Status</th>
               <th>Data</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="leadsBody">
-            <tr><td colspan="9" class="loading-row">Carregando...</td></tr>
+            <tr><td colspan="8" class="loading-row">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -94,7 +89,7 @@
     </div>
   </main>
 
-  <!-- Modal Novo Lead -->
+  <!-- Modal Novo/Editar Lead -->
   <div class="modal-overlay" id="leadModal">
     <div class="modal">
       <div class="modal-header">
@@ -106,7 +101,7 @@
 
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab('dados', this)">Dados Básicos</button>
-          <button class="tab-btn" onclick="switchTab('ibge', this)">Dados IBGE</button>
+          <button class="tab-btn" onclick="switchTab('nicho', this)">Nicho / Produto</button>
           <button class="tab-btn" onclick="switchTab('notas', this)">Notas</button>
         </div>
 
@@ -134,23 +129,29 @@
           </div>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Estado *</label>
+              <label class="form-label">Estado</label>
               <select class="form-select" id="fEstado" onchange="onEstadoChange()">
                 <option value="">Selecione...</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Cidade *</label>
-              <select class="form-select" id="fCidade" disabled onchange="onCidadeChange()">
+              <label class="form-label">Cidade</label>
+              <select class="form-select" id="fCidade" disabled>
                 <option value="">Selecione o estado primeiro</option>
               </select>
             </div>
           </div>
           <div class="form-grid">
             <div class="form-group">
+              <label class="form-label">Bairro</label>
+              <input type="text" class="form-input" id="fBairro" placeholder="Nome do bairro">
+            </div>
+            <div class="form-group">
               <label class="form-label">CEP</label>
               <input type="text" class="form-input" id="fCep" placeholder="00000-000" maxlength="9">
             </div>
+          </div>
+          <div class="form-grid">
             <div class="form-group">
               <label class="form-label">Status</label>
               <select class="form-select" id="fStatus">
@@ -160,52 +161,42 @@
                 <option value="descartado">Descartado</option>
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label">Origem</label>
+              <select class="form-select" id="fOrigem">
+                <option value="">Não informado</option>
+                <option value="site">Site</option>
+                <option value="indicacao">Indicação</option>
+                <option value="ads">Anúncio</option>
+                <option value="evento">Evento</option>
+                <option value="cold">Cold Outreach</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- Tab: Dados IBGE -->
-        <div id="tab-ibge" style="display:none">
-          <div id="ibgeLoading" style="text-align:center;padding:30px;color:var(--text-muted)">
-            Selecione estado e cidade para carregar dados do IBGE
+        <!-- Tab: Nicho / Produto -->
+        <div id="tab-nicho" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Nicho de Produto / Serviço</label>
+            <select class="form-select" id="fNicho">
+              <option value="">Selecione o nicho...</option>
+            </select>
           </div>
-          <div id="ibgeData" style="display:none">
-            <div class="ibge-widget">
-              <h2>Score IBGE Estimado</h2>
-              <div class="big" id="ibgeScore">—</div>
-              <div class="sub" id="ibgeSegmento">—</div>
-            </div>
-            <div class="info-card" style="margin-top:12px">
-              <h3>Indicadores Regionais</h3>
-              <div class="info-row"><span>PIB per capita (R$)</span><strong id="ibgePib">—</strong></div>
-              <div class="info-row"><span>População estimada</span><strong id="ibgePop">—</strong></div>
-              <div class="info-row"><span>IDHM</span><strong id="ibgeIdh">—</strong></div>
-              <div class="info-row"><span>Score PIB</span><strong id="ibgeScorePib">—</strong></div>
-              <div class="info-row"><span>Score IDH</span><strong id="ibgeScoreIdh">—</strong></div>
-              <div class="info-row"><span>Score Populacional</span><strong id="ibgeScorePop">—</strong></div>
-            </div>
+          <div class="form-group">
+            <label class="form-label">Descrição do interesse</label>
+            <textarea class="form-textarea" id="fNichoDesc" rows="4" placeholder="Ex: Procura salão de beleza no bairro X, interesse em produtos orgânicos..."></textarea>
           </div>
-          <input type="hidden" id="fScoreIbge">
-          <input type="hidden" id="fSegmento">
-          <input type="hidden" id="fMunicipioId">
-          <input type="hidden" id="fIbgeDetalhes">
+          <div style="margin-top:12px;padding:14px;background:var(--bg-secondary,#f8fafc);border-radius:8px;border:1px solid var(--border)">
+            <p style="margin:0;font-size:13px;color:var(--text-muted)">💡 O nicho define o segmento de produto ou serviço de interesse do lead. Use junto com cidade e bairro para identificar oportunidades geográficas por região.</p>
+          </div>
         </div>
 
         <!-- Tab: Notas -->
         <div id="tab-notas" style="display:none">
           <div class="form-group">
             <label class="form-label">Observações</label>
-            <textarea class="form-textarea" id="fNotas" rows="5" placeholder="Anotações sobre o lead, histórico de contato..."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Origem do lead</label>
-            <select class="form-select" id="fOrigem">
-              <option value="">Não informado</option>
-              <option value="site">Site</option>
-              <option value="indicacao">Indicação</option>
-              <option value="ads">Anúncio</option>
-              <option value="evento">Evento</option>
-              <option value="cold">Cold Outreach</option>
-            </select>
+            <textarea class="form-textarea" id="fNotas" rows="6" placeholder="Anotações sobre o lead, histórico de contato, produtos de interesse..."></textarea>
           </div>
         </div>
       </div>
